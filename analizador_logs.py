@@ -1,6 +1,9 @@
 import re
 import argparse
 import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s",style='%')
 
 def format_logs(file_logs: str) -> list[str]:
     return file_logs.split('\n')
@@ -37,7 +40,7 @@ def search_pattern(filter: str) -> str:
         return is_http_method
     
     else:
-        return filter
+        raise ValueError(f"Invalid filter: {filter}")
     
 def filter_logs(list_logs: list[str], filters: list[str]) -> list[str]:
     """
@@ -51,13 +54,11 @@ def filter_logs(list_logs: list[str], filters: list[str]) -> list[str]:
     list[str]: list of logs that match
 
     """
-    patterns: list[str] = []
-    for filter in filters:
-        pattern = search_pattern(filter)
-        if pattern == filter:
-            print("Pattern not found")
-            return []
-        patterns.append(pattern)
+    try:
+        patterns = [search_pattern(f) for f in filters]
+    except ValueError as e:
+        logging.error(e)
+        return []
         
     for index,pattern in enumerate(patterns):
         list_logs = [log for log in list_logs if re.search(pattern, log) and re.search(pattern, log).group() == filters[index]]
@@ -72,17 +73,18 @@ if __name__ == '__main__':
     parser.add_argument('-logfile',required=True, type=str, help='The log file to process')
     parser.add_argument('-filters',required=True ,type=str,
                          help='The filters to apply to the logs (IP[example:8.8.8.8], status code[example:200], HTTP[example:GET] method and date[example:01/Jan/2021])')
-
+    parser.add_argument('-export', type=str, help='Export the logs to a file')
+    parser.add_argument('-verbose', action='store_true', help='Print the logs in the console si el número de logs es menor a 100')
     args = parser.parse_args()
 
     try:
         with open(args.logfile, 'r') as file:
             file_logs: str = file.read()
     except FileNotFoundError:
-        print(f"File {args.logfile} not found.")
+        logging.error(f"File {args.logfile} not found")
         exit(1)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred while reading the file: {e}")
         exit(1)
 
     start_time = datetime.datetime.now()
@@ -93,17 +95,15 @@ if __name__ == '__main__':
     if logs:
         
         end_time = datetime.datetime.now()
-        print(f"Logs found in {end_time - start_time}")
-        print(f"Logs found: {len(logs)}")
-
-        show_results = input("Do you want to see the logs? (y/n): ")
-        if show_results.lower() == 'y':
+        logging.info(f"Logs found in {end_time - start_time}")
+        logging.info(f"Logs found: {len(logs)}")
+        
+        if args.verbose and len(logs) < 100:
             for log in logs:
                 print(log)
-        export = input("Do you want to export the logs to a file? (y/n): ")
-        if export.lower() == 'y':
-            file_name = input("Enter the file name to export the logs: ")
-            with open(f'{file_name}.txt', 'w') as file:
+        
+        if args.export:
+            with open(f'{args.export}.txt', 'w') as file:
                 for log in logs:
                     file.write(f"{log}\n")
-            print("Logs exported successfully")
+            logging.info(f"Logs exported successfully to {args.export}.txt")
