@@ -19,5 +19,6 @@ Si necesitas ayuda puedes ejecutar
 ```sh
 python analizador_logs.py -h
 ```
-Nota: El archivo `server_logs.log` es un archivo de prueba, puedes cambiarlo para tu archivo de logs
-Ejemplo de ejecucion: python analizador_logs.py -logfile server_logs.log -filters 200,GET 
+Nota: El archivo `server_logs.log` es un archivo de prueba, puedes cambiarlo para tu archivo de logs.
+
+Ejemplo de ejecución: `python analizador_logs.py -logfile server_logs.log -filters 200,GET`
