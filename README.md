@@ -13,10 +13,11 @@ Este script en Python permite analizar y filtrar logs de un archivo de registros
 3. Ejecuta el script con el siguiente comando:
 
 ```sh
-python analizador_logs.py -logfile <ruta_del_archivo_de_logs> -filter <filtro>
+python analizador_logs.py -logfile <ruta_del_archivo_de_logs> -filters <filtros>
 ```
 Si necesitas ayuda puedes ejecutar
 ```sh
 python analizador_logs.py -h
 ```
 Nota: El archivo `server_logs.log` es un archivo de prueba, puedes cambiarlo para tu archivo de logs
+Ejemplo de ejecucion: python analizador_logs.py -logfile server_logs.log -filters 200,GET 

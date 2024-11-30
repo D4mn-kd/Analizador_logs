@@ -5,6 +5,9 @@ import datetime
 def format_logs(file_logs: str) -> list[str]:
     return file_logs.split('\n')
 
+def format_filters(filters: str) -> list[str]:
+    return filters.split(',')
+
 def search_pattern(filter: str) -> str:
     """
     This function searches for the pattern to apply to the logs depending on the filter
@@ -36,36 +39,39 @@ def search_pattern(filter: str) -> str:
     else:
         return filter
     
-def filter_logs(list_logs: list[str], filter: str) -> list[str]:
+def filter_logs(list_logs: list[str], filters: list[str]) -> list[str]:
     """
     This function filters the logs based on the filter provided
 
     :Args:
     list_logs: list[str] -> list of logs
-    filter: str -> filter to apply to the logs
+    filters: list[str] -> filters to apply to the logs
 
     :Returns:
     list[str]: list of logs that match
 
     """
-    pattern = search_pattern(filter)
-    if pattern == filter:
-        print("Pattern not found")
-        return []
-    
-    logs: list[str] = [log for log in list_logs if re.search(pattern, log) and re.search(pattern, log).group() == filter]
+    patterns: list[str] = []
+    for filter in filters:
+        pattern = search_pattern(filter)
+        if pattern == filter:
+            print("Pattern not found")
+            return []
+        patterns.append(pattern)
+        
+    for index,pattern in enumerate(patterns):
+        list_logs = [log for log in list_logs if re.search(pattern, log) and re.search(pattern, log).group() == filters[index]]
 
-    if not logs:
+    if not list_logs:
         print("No logs found")
-        return logs
-    else:
-        return logs 
 
+    return list_logs
+    
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process some logs. [Example ejecution:python analizador_logs.py -logfile server_logs.log -filter 200]')
+    parser = argparse.ArgumentParser(description='Process some logs. [Example ejecution:python analizador_logs.py -logfile server_logs.log -filters 200,GET]')
     parser.add_argument('-logfile',required=True, type=str, help='The log file to process')
-    parser.add_argument('-filter',required=True ,type=str,
-                         help='The filter to apply to the logs (IP[example:8.8.8.8], status code[example:200], HTTP[example:GET] method and date[example:01/Jan/2021])')
+    parser.add_argument('-filters',required=True ,type=str,
+                         help='The filters to apply to the logs (IP[example:8.8.8.8], status code[example:200], HTTP[example:GET] method and date[example:01/Jan/2021])')
 
     args = parser.parse_args()
 
@@ -81,12 +87,13 @@ if __name__ == '__main__':
 
     start_time = datetime.datetime.now()
     list_logs: list[str] = format_logs(file_logs)
-    logs: list[str] = filter_logs(list_logs, args.filter)
+    list_filters: list[str] = format_filters(args.filters)
+    logs: list[str] = filter_logs(list_logs,list_filters)
 
     if logs:
         
-        end_tiem = datetime.datetime.now()
-        print(f"Logs found in {end_tiem - start_time}")
+        end_time = datetime.datetime.now()
+        print(f"Logs found in {end_time - start_time}")
         print(f"Logs found: {len(logs)}")
 
         show_results = input("Do you want to see the logs? (y/n): ")
