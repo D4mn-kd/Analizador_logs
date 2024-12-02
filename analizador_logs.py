@@ -74,7 +74,7 @@ if __name__ == '__main__':
     parser.add_argument('-filters',required=True ,type=str,
                          help='The filters to apply to the logs (IP[example:8.8.8.8], status code[example:200], HTTP[example:GET] method and date[example:01/Jan/2021])')
     parser.add_argument('-export', type=str, help='Export the logs to a file')
-    parser.add_argument('-verbose', action='store_true', help='Print the logs in the console si el número de logs es menor a 100')
+    parser.add_argument('-verbose','-v', action='store_true', help='Print the logs in the console si el número de logs es menor a 100')
     args = parser.parse_args()
 
     try:
