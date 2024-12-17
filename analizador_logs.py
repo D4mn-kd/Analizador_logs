@@ -11,7 +11,7 @@ def format_logs(file_logs: str) -> list[str]:
 def format_filters(filters: str) -> list[str]:
     return filters.split(',')
 
-def search_pattern(filter: str) -> str:
+def search_pattern(filter: str) -> list[str]:
     """
     This function searches for the pattern to apply to the logs depending on the filter
 
@@ -28,20 +28,47 @@ def search_pattern(filter: str) -> str:
     is_date: str =r'\d{2}\/\w{3}\/\d{4}'
 
     if re.search(is_ip, filter):
-        return is_ip
+        return [is_ip,"is_ip"]
     
     elif re.search(is_date, filter):
-        return is_date
+        return [is_date,"is_date"]
 
     elif re.search(is_status_code, filter):
-        return r"(?<=\s)[1-5][0-9]{2}(?=\s)"
+        return [r"(?<=\s)[1-5][0-9]{2}(?=\s)", "is_status_code"]
     
     elif re.search(is_http_method, filter):
-        return is_http_method
+        return [is_http_method,"is_http_method"]
     
     else:
         raise ValueError(f"Invalid filter: {filter}")
+
+def dic_filters(filters: list[str]) -> dict[str, list[str]]:
+    """
+    This function creates a dictionary with the filters to apply to the logs
+
+    :Args:
+    filters: list[str] -> filters to apply to the logs
+
+    :Returns:
+    dict[str, list[str]]: dictionary with the filters to apply to the logs
+
+    """
+    filter_dict = {
+        "is_ip": [],
+        "is_status_code": [],
+        "is_http_method": [],
+        "is_date": []
+    }
     
+    for filter in filters:
+        type_filter = search_pattern(filter)[1]
+        if type_filter in filter_dict:
+            filter_dict[type_filter].append(filter)
+        else:
+            logging.error(f"Invalid filter: {filter}")
+            
+    return filter_dict
+
 def filter_logs(list_logs: list[str], filters: list[str]) -> list[str]:
     """
     This function filters the logs based on the filter provided
@@ -55,13 +82,18 @@ def filter_logs(list_logs: list[str], filters: list[str]) -> list[str]:
 
     """
     try:
-        patterns = [search_pattern(f) for f in filters]
+        patterns: list[list[str]] = [search_pattern(f) for f in filters]
     except ValueError as e:
         logging.error(e)
         return []
+    try:
+        filters_dic:  dict[str, list[str]]= dic_filters(filters)
+    except Exception as e:
+        logging.error(e)
+        return []
         
-    for index,pattern in enumerate(patterns):
-        list_logs = [log for log in list_logs if re.search(pattern, log) and re.search(pattern, log).group() == filters[index]]
+    for regex,type_pattern in patterns:
+        list_logs = [log for log in list_logs if re.search(regex, log) and re.search(regex, log).group() in filters_dic[type_pattern]]
 
     if not list_logs:
         print("No logs found")
